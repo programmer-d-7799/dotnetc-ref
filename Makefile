@@ -1,4 +1,4 @@
-.PHONY: compile build-hello build-helloweb build-hellowebenterprise build-async hello helloweb hellowebenterprise async hellowebup
+.PHONY: compile build-hello build-helloweb build-hellowebenterprise build-async build-threadcontrol hello helloweb hellowebenterprise async threadcontrol hellowebup
 
 compile:
 	dotnet build ./dotnetc-ref.sln
@@ -15,6 +15,9 @@ build-hellowebenterprise:
 build-async:
 	dotnet build ./async/Async.csproj
 
+build-threadcontrol:
+	dotnet build ./threadcontrol/ThreadControl.csproj
+
 hello:
 	dotnet run --project ./hello/Hello.csproj
 
@@ -29,3 +32,6 @@ hellowebenterprise:
 
 async:
 	dotnet run --project ./async/Async.csproj
+
+threadcontrol:
+	dotnet run --project ./threadcontrol/ThreadControl.csproj
