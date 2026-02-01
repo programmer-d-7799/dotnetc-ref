@@ -17,6 +17,7 @@ internal static class Program
         {
             await RunConcurrentWorkAsync(cts.Token);
             await RunConcurrentWorkWhenAnyAsync(cts.Token);
+            await DisplayMultipleThreadsAsync(cts.Token);
             await StreamSquaresAsync(cts.Token);
         }
         catch (OperationCanceledException)
@@ -75,6 +76,36 @@ internal static class Program
         sw.Stop();
         Console.WriteLine($"Results: {string.Join(", ", results)}");
         Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds} ms");
+    }
+
+    private static async Task DisplayMultipleThreadsAsync(CancellationToken token)
+    {
+        Console.WriteLine("\nMultiple threads demo:");
+        Console.WriteLine($"Main thread: {Thread.CurrentThread.ManagedThreadId}");
+
+        var sw = Stopwatch.StartNew();
+
+        var tasks = new Task<string>[4];
+
+        for (int i = 0; i < tasks.Length; i++)
+        {
+            int workerId = i + 1;
+            tasks[i] = Task.Run(async () =>
+            {
+                Console.WriteLine($"Worker {workerId} start on thread {Thread.CurrentThread.ManagedThreadId}");
+                var workerSw = Stopwatch.StartNew();
+                await Task.Delay(200 + workerId * 100, token);
+                workerSw.Stop();
+                Console.WriteLine($"Worker {workerId} end on thread {Thread.CurrentThread.ManagedThreadId}");
+                return $"Worker {workerId}: {workerSw.ElapsedMilliseconds} ms";
+            }, token);
+        }
+
+        var results = await Task.WhenAll(tasks);
+
+        sw.Stop();
+        Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds} ms");
+        Console.WriteLine($"Per-worker: {string.Join(", ", results)}");
     }
 
     private static async Task<string> SimulatedIoAsync(string name, int delayMs, CancellationToken token)
