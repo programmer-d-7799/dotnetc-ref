@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -15,6 +16,7 @@ internal static class Program
         try
         {
             await RunConcurrentWorkAsync(cts.Token);
+            await RunConcurrentWorkWhenAnyAsync(cts.Token);
             await StreamSquaresAsync(cts.Token);
         }
         catch (OperationCanceledException)
@@ -39,6 +41,36 @@ internal static class Program
         };
 
         var results = await Task.WhenAll(tasks);
+
+        sw.Stop();
+        Console.WriteLine($"Results: {string.Join(", ", results)}");
+        Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds} ms");
+    }
+
+    private static async Task RunConcurrentWorkWhenAnyAsync(CancellationToken token)
+    {
+        Console.WriteLine("\nTask.WhenAny demo:");
+
+        var sw = Stopwatch.StartNew();
+
+        var pending = new List<Task<string>>
+        {
+            SimulatedIoAsync("A", 400, token),
+            SimulatedIoAsync("B", 650, token),
+            SimulatedIoAsync("C", 250, token)
+        };
+
+        var results = new List<string>(pending.Count);
+
+        while (pending.Count > 0)
+        {
+            var completed = await Task.WhenAny(pending);
+            pending.Remove(completed);
+
+            var result = await completed;
+            results.Add(result);
+            Console.WriteLine($"Completed: {result}");
+        }
 
         sw.Stop();
         Console.WriteLine($"Results: {string.Join(", ", results)}");
